@@ -55,13 +55,25 @@ bench: $(TESTS)
 		./$$test --bench $(TEST_DATA); \
 	done
 
-bench_all: $(TESTS)
+search-all: $(TESTS)
 	@for test in $(TESTS); do\
 		./$$test --bench ; \
 	done
+
 plot:
 	gnuplot scripts/runtimept.gp
 	eog runtime2.png &
+
+perf-search: $(TESTS)
+	@for test in $(TESTS); do\
+		echo 3 | sudo tee /proc/sys/vm/drop_caches; \
+		perf stat \
+			-e cache-misses,cache-references,instructions,cycles \
+			./$$test --bench; \
+	done
+
+enable-perf:
+	sudo sh -c " echo -1 > /proc/sys/kernel/perf_event_paranoid"
 
 clean:
 	$(RM) $(TESTS) $(OBJS)
